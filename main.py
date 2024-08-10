@@ -62,25 +62,34 @@ def display_data_within_entry_fields(event):
         
     
 def update_account():
-    id = id_entry.get()
-    account_type = account_type_entry.get()
-    username = username_entry.get()
-    email = email_entry.get()
-    password = password_entry.get()
-    
-    if not (id and account_type and username and email and password):
-        message_info = "Complete all fields"
-    elif not database.id_exists(id):
-        message_info = "Account doesn't exist"
+    selected_item = tree.focus()
+    if not selected_item:
+        message_info = "Choose Account to update"
     else:
-        database.insert_account(id, account_type, username, email, password)
-        clear_input_fields()
+        id = id_entry.get()
+        account_type = account_type_entry.get()
+        username = username_entry.get()
+        email = email_entry.get()
+        password = password_entry.get()
+        database.update_account(account_type, username, email, password, id)
         display_accounts()
+        clear_input_fields()
         message_info = "Account Updated"
     notification_info.configure(text=message_info)
 
 
-
+def delete_account():
+    selected_item = tree.focus()
+    if not selected_item:
+        message_info = "Choose account first"
+    else:
+        id = id_entry.get()
+        database.delete_account(id)
+        display_accounts()
+        clear_input_fields()
+        message_info = "Account deleted"
+    notification_info.configure(text=message_info)
+    
 
 # ---------------------------- UI SETUP ---------------------------- #
 
@@ -219,11 +228,12 @@ add_button = customtkinter.CTkButton(
     cursor="hand2",
     corner_radius=6,
     width=260,
+    height=50,
     command=insert_account
 )
-add_button.place(x=20, y=310)
+add_button.place(x=20, y=270)
 
-# Update
+# Update Account
 update_button = customtkinter.CTkButton(
     app,
     font=font1,
@@ -235,8 +245,10 @@ update_button = customtkinter.CTkButton(
     cursor="hand2",
     corner_radius=6,
     width=260,
+    height=50,
+    command=update_account
 )
-update_button.place(x=20, y=360)
+update_button.place(x=20, y=335)
 
 # Clear selection
 clear_button = customtkinter.CTkButton(
@@ -265,6 +277,7 @@ delete_button = customtkinter.CTkButton(
     bg_color="#161C25",
     cursor="hand2",
     corner_radius=6,
+    command=delete_account,
     width=140,
 )
 delete_button.place(x=940, y=360)
