@@ -36,7 +36,7 @@ def insert_account():
     password = password_entry.get()
     
     if not (id and account_type and username and email and password):
-        messagebox.showerror("Error", "Enter all fields...")
+        message_info = "Fill all fields"
     elif database.id_exists(id):
         message_info = "Error, ID exists"
     else:
@@ -69,14 +69,15 @@ def update_account():
     password = password_entry.get()
     
     if not (id and account_type and username and email and password):
-        messagebox.showerror("Error", "Enter all fields...")
+        message_info = "Complete all fields"
     elif not database.id_exists(id):
-        messagebox.showerror("Error", "Account does not exist to be updated")
+        message_info = "Account doesn't exist"
     else:
         database.insert_account(id, account_type, username, email, password)
         clear_input_fields()
         display_accounts()
-        messagebox.showinfo("Success", "Account added successfully")
+        message_info = "Account Updated"
+    notification_info.configure(text=message_info)
 
 
 
