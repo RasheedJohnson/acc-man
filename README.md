@@ -2,9 +2,13 @@
 
 #### **Video Demo:** <URL HERE>
 
-#### **Description:** The app allows users to store passwords and account details similar to a password manager, however, it's intended to be a run from an encrypted storage device.
+#### **Description:**
 
-##### **Launching the app:** Users can run `python app.py` with the terminal opened in the root folder.
+The app allows users to store passwords and account details similar to a password manager, however, it's intended to be a run from an encrypted storage device.
+
+##### **Launching the app:**
+
+Users can run `python app.py` with the terminal opened in the root folder.
 
 ##### **Usage:**
 
