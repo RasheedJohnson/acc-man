@@ -33,6 +33,7 @@ def fetch_accounts() -> list:
     cursor.execute("SELECT * FROM Accounts")
     accounts = cursor.fetchall()
     conn.close()
+    print(accounts)
     return accounts
 
 
