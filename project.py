@@ -9,6 +9,8 @@ import random
 import csv
 from characters import letters, numbers, symbols
 
+PASS_CHAR_LENGTH = 12
+
 
 def main():
     """
@@ -95,7 +97,7 @@ def generate_pass() -> str:
 
     random_option = [letters, numbers, letters, symbols]
     password = ""
-    for _ in range(12):
+    for _ in range(PASS_CHAR_LENGTH):
         type_char = random.choice(random_option)
         password += random.choice(type_char)
     return password

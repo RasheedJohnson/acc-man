@@ -1,5 +1,5 @@
 import pytest
-from project import generate_pass, parse_dict, read_from_backup
+from project import generate_pass, parse_dict, read_from_backup, PASS_CHAR_LENGTH
 
 
 def main():
@@ -39,7 +39,7 @@ def test_parse_dict():
 
 def test_pass_gen():
     assert type(generate_pass()) == str
-    assert len(generate_pass()) == 12
+    assert len(generate_pass()) == PASS_CHAR_LENGTH
 
 
 if __name__ == "__main__":
