@@ -54,7 +54,8 @@ def display_accounts_from_db() -> None:
     tree.delete(*tree.get_children())
     for acc in accounts:
         tree.insert("", END, values=acc)
-
+    notice = "Data from main\ndatabase on display"
+    notification_info.configure(text=notice)
 
 def display_accounts_from_backup() -> None:
     """
@@ -65,6 +66,8 @@ def display_accounts_from_backup() -> None:
     tree.delete(*tree.get_children())
     for acc in accounts:
         tree.insert("", END, values=acc)
+    notice = "Data from backup\ndatabase on display"
+    notification_info.configure(text=notice)
 
 
 def alternate_accounts(value) -> None:
@@ -74,11 +77,8 @@ def alternate_accounts(value) -> None:
     """
     if value == "backup_list":
         display_accounts_from_backup()
-        notice = "Backup data on display"
     else:
         display_accounts_from_db()
-        notice = "Main database data on display"
-    notification_info.configure(text=notice)
 
 
 def insert_account() -> None:
