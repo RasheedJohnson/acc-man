@@ -1,46 +1,31 @@
 import pytest
-from project import generate_pass
+from project import generate_pass, parse_dict, read_from_backup
 
 
 
 def main():
     test_pass_gen()
+    test_parse_dict()
+    test_read_from_backup()
+
+def test_read_from_backup():
+    assert type(read_from_backup()) == list
+
+def test_parse_dict():
+    mock_list = [
+        {"id": 1, "account_type":"site_a", "username":"john harvard", "email":"john@harvard.edu", "password": "pass123"},
+        {"id": 2, "account_type":"site_b", "username":"Grace Hopper", "email":"grace@harvard.edu", "password": "pass12356"}
+        ]
+    result = [
+        (1, "site_a", "john harvard", "john@harvard.edu", "pass123"),
+        (2, "site_b", "Grace Hopper", "grace@harvard.edu",  "pass12356")
+        ]
+    assert type(parse_dict(mock_list)) == list
+    assert parse_dict(mock_list) == result
 
 def test_pass_gen():
     assert type(generate_pass()) == str
     assert len(generate_pass()) == 12
-
-# import pyperclip
-# import unittest
-# import pytest
-# from unittest.mock import MagicMock
-# import customtkinter
-# from project import clear_input_fields, accounts_dict
-# import tkinter as tk
-
-
-
-
-
-
-# def main(entry_list):
-#     test_accounts_dict()
-    
-
-# def test_accounts_dict():
-#     assert type(accounts_dict()) == dict
-
-# # def test_clear_input_fields():
-# #   entries = [MagicMock(), MagicMock(), MagicMock()]
-# #   clear_input_fields(entries)
-  
-# #   for entry in entries:
-# #     entry.delete.assert_called_once_with(0, customtkinter.END)
-# # class TestApp(unittest.TestCase):
-# #     def test_copy_to_clipboard(self):
-# #         result = copy_to_clipboard()
-# #         self.assertEqual(result, None)
-
 
 
 if __name__ == "__main__":

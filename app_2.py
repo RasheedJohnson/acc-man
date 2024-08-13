@@ -137,15 +137,14 @@ def update_account() -> None:
     if not selected_item:
         notice = "Choose Account to update"
     else:
-        id = id_entry.get()
-        account_type = account_type_entry.get()
-        username = username_entry.get()
-        email = email_entry.get()
-        password = password_entry.get()
-        database.update_account(account_type, username, email, password, id)
+        info = accounts_dict()
+        project.store_in_backup(
+            [info["id"], info["acc_type"], info["name"], info["email"], info["pass"]]
+        )
+        database.update_account(info["acc_type"], info["name"], info["email"], info["pass"], info["id"])
         display_accounts_from_db()
         clear_input_fields()
-        notice = "Account Updated"
+        notice = "Account Updated and re-added to backup"
     notification_info.configure(text=notice)
 
 
@@ -301,8 +300,6 @@ notification_heading = customtkinter.CTkLabel(
     app, font=font1i, text="Notifications:", text_color="#5A5", bg_color=BG_COLOR
 )
 notification_heading.place(x=940, y=80)
-
-# Notifications
 notification_info = customtkinter.CTkLabel(
     app, font=font1i, text=message_info, text_color="#5A5", bg_color=BG_COLOR
 )
@@ -328,22 +325,24 @@ add_button = customtkinter.CTkButton(
 add_button.place(x=20, y=270)
 
 # Toggle backup or database display
+seg_btn_label = customtkinter.CTkLabel(
+    app, font=font1, text="display", text_color="#fff", bg_color=BG_COLOR
+)
+seg_btn_label.place(x=20, y=315)
 toggle_values = ["backup_list", "database_list"]
 toggle_btn = customtkinter.CTkSegmentedButton(
     app,
     font=font1,
     text_color="#fff",
-    # text="Show Backups",
     fg_color="#05638A",
-    # hover_color="#8888AA",
     bg_color="#161C25",
-    # cursor="hand2",
     corner_radius=6,
-    width=300,
+    height=30,
+    width=260,
     values=toggle_values,
     command=alternate_accounts,
 )
-toggle_btn.place(x=20, y=315)
+toggle_btn.place(x=95, y=315)
 # set default value
 toggle_btn.set("database_list")
 
