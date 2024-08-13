@@ -7,6 +7,7 @@ import tkinter as tk
 import customtkinter
 from PIL import Image
 import pyperclip
+import project
 import database
 
 # --------------------------- OPERATIONS --------------------------- #
@@ -14,7 +15,8 @@ import database
 
 def accounts_dict() -> dict:
     """
-    Returns list of entries as a dict
+    Returns list of collected entries
+    from fields as a dict
     """
     id = id_entry.get()
     account_type = account_type_entry.get()
@@ -43,21 +45,46 @@ def clear_input_fields(*clicked) -> None:
     password_entry.delete(0, customtkinter.END)
 
 
-def display_accounts() -> None:
+def display_accounts_from_db() -> None:
     """
-    Fetches account information from the database (likely
-    a separate file) and populates the list with it.
+    Fetches account information from the main database
+    and inserts information into tree/table
     """
     accounts = database.fetch_accounts()
     tree.delete(*tree.get_children())
-    for account in accounts:
-        tree.insert("", END, values=account)
+    for acc in accounts:
+        tree.insert("", END, values=acc)
+
+
+def display_accounts_from_backup() -> None:
+    """
+    Fetches account information from the backup.csv
+    and inserts information into tree/table
+    """
+    accounts = project.read_from_backup()
+    tree.delete(*tree.get_children())
+    for acc in accounts:
+        tree.insert("", END, values=acc)
+
+
+def alternate_accounts(value) -> None:
+    """
+    Displays either backup data or database data
+    depending on the value it receives
+    """
+    if value == "backup_list":
+        display_accounts_from_backup()
+        notice = "Backup data on display"
+    else:
+        display_accounts_from_db()
+        notice = "Main database data on display"
+    notification_info.configure(text=notice)
 
 
 def insert_account() -> None:
     """
-    Adds a new account to the database based on the information
-    entered.
+    Adds a new account to the database and
+    the backup.csv file
     """
     info = accounts_dict()
     if not (
@@ -74,16 +101,19 @@ def insert_account() -> None:
         database.insert_account(
             info["id"], info["acc_type"], info["name"], info["email"], info["pass"]
         )
+        project.store_in_backup(
+            [info["id"], info["acc_type"], info["name"], info["email"], info["pass"]]
+        )
         clear_input_fields()
-        display_accounts()
+        display_accounts_from_db()
         notice = "Account added"
     notification_info.configure(text=notice)
 
 
 def display_data_within_entry_fields(event) -> None:
     """
-    When an account is selected in the list, this function fills
-    the entry fields with its details
+    Fills entry fields with account details if
+    an account is selected from the tree/table
     """
     selected_item = tree.focus()
     if selected_item:
@@ -107,15 +137,16 @@ def update_account() -> None:
     if not selected_item:
         notice = "Choose Account to update"
     else:
-        id = id_entry.get()
-        account_type = account_type_entry.get()
-        username = username_entry.get()
-        email = email_entry.get()
-        password = password_entry.get()
-        database.update_account(account_type, username, email, password, id)
-        display_accounts()
+        info = accounts_dict()
+        project.store_in_backup(
+            [info["id"], info["acc_type"], info["name"], info["email"], info["pass"]]
+        )
+        database.update_account(
+            info["acc_type"], info["name"], info["email"], info["pass"], info["id"]
+        )
+        display_accounts_from_db()
         clear_input_fields()
-        notice = "Account Updated"
+        notice = "Account Updated and re-added to backup"
     notification_info.configure(text=notice)
 
 
@@ -129,7 +160,7 @@ def delete_account() -> None:
     else:
         id = id_entry.get()
         database.delete_account(id)
-        display_accounts()
+        display_accounts_from_db()
         clear_input_fields()
         notice = "Account deleted"
     notification_info.configure(text=notice)
@@ -144,8 +175,16 @@ def copy_to_clipboard() -> None:
     pyperclip.copy(password)
 
 
-def generate_pass():
-    password_entry.insert(0, "test")
+def generate_pass() -> None:
+    """
+    Generates 12 character password of
+    letters, numbers, and symbols
+    """
+    password_entry.delete(0, customtkinter.END)
+    new_pass = project.generate_pass()
+    password_entry.insert(0, new_pass)
+
+
 # ---------------------------- UI SETUP ---------------------------- #
 
 app = customtkinter.CTk()
@@ -264,8 +303,6 @@ notification_heading = customtkinter.CTkLabel(
     app, font=font1i, text="Notifications:", text_color="#5A5", bg_color=BG_COLOR
 )
 notification_heading.place(x=940, y=80)
-
-# Notifications
 notification_info = customtkinter.CTkLabel(
     app, font=font1i, text=message_info, text_color="#5A5", bg_color=BG_COLOR
 )
@@ -286,10 +323,31 @@ add_button = customtkinter.CTkButton(
     cursor="hand2",
     corner_radius=6,
     width=260,
-    height=50,
     command=insert_account,
 )
 add_button.place(x=20, y=270)
+
+# Toggle backup or database display
+seg_btn_label = customtkinter.CTkLabel(
+    app, font=font1, text="display", text_color="#fff", bg_color=BG_COLOR
+)
+seg_btn_label.place(x=20, y=315)
+toggle_values = ["backup_list", "database_list"]
+toggle_btn = customtkinter.CTkSegmentedButton(
+    app,
+    font=font1,
+    text_color="#fff",
+    fg_color="#05638A",
+    bg_color="#161C25",
+    corner_radius=6,
+    height=30,
+    width=260,
+    values=toggle_values,
+    command=alternate_accounts,
+)
+toggle_btn.place(x=95, y=315)
+# set default value
+toggle_btn.set("database_list")
 
 # Update Account
 update_button = customtkinter.CTkButton(
@@ -303,10 +361,9 @@ update_button = customtkinter.CTkButton(
     cursor="hand2",
     corner_radius=6,
     width=260,
-    height=50,
     command=update_account,
 )
-update_button.place(x=20, y=335)
+update_button.place(x=20, y=360)
 
 # Clear selection
 clear_button = customtkinter.CTkButton(
@@ -374,7 +431,6 @@ gen_button = customtkinter.CTkButton(
 gen_button.place(x=133, y=3)
 
 
-
 # ------------------------- ACCOUNTS SHEET ------------------------- #
 
 
@@ -410,6 +466,6 @@ tree.place(x=310, y=60)
 
 tree.bind("<ButtonRelease>", display_data_within_entry_fields)
 
-display_accounts()
+display_accounts_from_db()
 
 app.mainloop()
