@@ -146,7 +146,7 @@ def update_account() -> None:
         )
         display_accounts_from_db()
         clear_input_fields()
-        notice = "Account Updated\log added to\nbackup"
+        notice = "Account Updated\nlog added to\nbackup"
     notification_info.configure(text=notice)
 
 
