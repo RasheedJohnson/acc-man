@@ -9,7 +9,7 @@ import random
 import csv
 from characters import letters, numbers, symbols
 
-PASS_CHAR_LENGTH = 25
+PASS_CHAR_LENGTH = 12
 
 
 def main():

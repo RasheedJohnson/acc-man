@@ -1,6 +1,6 @@
 # Accounts Manager
 
-#### **Video Demo:** <URL HERE>
+#### **Video Demo:** [<URL HERE>](https://www.youtube.com/watch?v=yQvBZjovJ_w)
 
 #### **Description:**
 
@@ -82,3 +82,9 @@ A test file for **_*project.py*_**
 #### **Layout and design:**
 
 I chose to keep the _delete_ button separate from the less “destructive” buttons
+
+github: https://github.com/RasheedJohnson/
+
+edX: Rasheed_J
+
+Date: 14 - 08 - 2024
