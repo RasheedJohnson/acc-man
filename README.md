@@ -1,6 +1,6 @@
 # Accounts Manager
 
-#### **Video Demo:** [<URL HERE>](https://www.youtube.com/watch?v=yQvBZjovJ_w)
+#### **Video Demo:** https://www.youtube.com/watch?v=yQvBZjovJ_w
 
 #### **Description:**
 
