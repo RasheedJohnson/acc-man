@@ -12,6 +12,51 @@ import database
 
 # --------------------------- OPERATIONS --------------------------- #
 
+# Maps tree item ids to full (unmasked) account rows
+tree_records = {}
+
+WINDOW_W = 780
+WINDOW_H = 460
+
+
+def mask_email(email) -> str:
+    """
+    Hides local-part characters after the first letter
+    and before "@" when present. e.g. j***@mail.com
+    """
+    email = "" if email is None else str(email)
+    if "@" in email:
+        local, domain = email.split("@", 1)
+        if len(local) <= 1:
+            return f"{local}@{domain}"
+        return f"{local[0]}{'*' * (len(local) - 1)}@{domain}"
+    if len(email) <= 1:
+        return email
+    return email[0] + "*" * (len(email) - 1)
+
+
+def mask_password(password) -> str:
+    """Hides every password character with '*'."""
+    password = "" if password is None else str(password)
+    return "*" * len(password)
+
+
+def masked_account_row(acc) -> tuple:
+    """Display values for the tree: email and password masked."""
+    return (acc[0], acc[1], acc[2], mask_email(acc[3]), mask_password(acc[4]))
+
+
+def populate_tree(accounts) -> None:
+    """
+    Fills the tree with masked rows while keeping
+    the real account details available for selection/copy.
+    """
+    tree_records.clear()
+    tree.delete(*tree.get_children())
+    for acc in accounts:
+        item_id = tree.insert("", END, values=masked_account_row(acc))
+        tree_records[item_id] = tuple(acc)
+
 
 def accounts_dict() -> dict:
     """
@@ -50,22 +95,17 @@ def display_accounts_from_db() -> None:
     Fetches account information from the main database
     and inserts information into tree/table
     """
-    accounts = database.fetch_accounts()
-    tree.delete(*tree.get_children())
-    for acc in accounts:
-        tree.insert("", END, values=acc)
+    populate_tree(database.fetch_accounts())
     notice = "Data from main\ndatabase on display"
     notification_info.configure(text=notice)
+
 
 def display_accounts_from_backup() -> None:
     """
     Fetches account information from the backup.csv
     and inserts information into tree/table
     """
-    accounts = project.read_from_backup()
-    tree.delete(*tree.get_children())
-    for acc in accounts:
-        tree.insert("", END, values=acc)
+    populate_tree(project.read_from_backup())
     notice = "Data from backup\ndatabase on display"
     notification_info.configure(text=notice)
 
@@ -112,12 +152,12 @@ def insert_account() -> None:
 
 def display_data_within_entry_fields(event) -> None:
     """
-    Fills entry fields with account details if
-    an account is selected from the tree/table
+    Fills entry fields with the real (unmasked) account
+    details if an account is selected from the tree/table.
     """
     selected_item = tree.focus()
-    if selected_item:
-        row = tree.item(selected_item)["values"]
+    row = tree_records.get(selected_item)
+    if selected_item and row:
         clear_input_fields()
         id_entry.insert(0, row[0])
         account_type_entry.insert(0, row[1])
@@ -189,23 +229,31 @@ def generate_pass() -> None:
 
 app = customtkinter.CTk()
 app.title("Account Manager")
-app.geometry("1100x420")
+app.geometry(f"{WINDOW_W}x{WINDOW_H}")
 app.config(bg="#161c25")
 app.resizable(False, False)
 
 image = Image.open("bg.png")
-background_image = customtkinter.CTkImage(image, size=(1100, 420))
+background_image = customtkinter.CTkImage(image, size=(WINDOW_W, WINDOW_H))
 bg_lbl = customtkinter.CTkLabel(app, text="", image=background_image)
 bg_lbl.place(x=0, y=0)
 
-font0 = ("Arial", 17, "bold")
-font1 = ("Lexend", 14, "normal")
-font1i = ("Lexend", 14, "italic")
-font2 = ("Arial", 10, "normal")
+font0 = ("Arial", 16, "bold")
+font1 = ("Lexend", 13, "normal")
+font1i = ("Lexend", 12, "italic")
+font2 = ("Arial", 9, "normal")
 
 ENTRY_COLOR = "#444"
 ENTRY_TEXT = "#AAA"
 BG_COLOR = "#050505"
+
+LEFT_X = 18
+ENTRY_X = 95
+ENTRY_W = 155
+FORM_BTN_W = 232
+TREE_X = 275
+RIGHT_X = 655
+RIGHT_BTN_W = 108
 
 message_info = "Welcome!"
 
@@ -216,13 +264,13 @@ message_info = "Welcome!"
 title_label = customtkinter.CTkLabel(
     app, font=font0, text="Accounts Manager", bg_color=BG_COLOR
 )
-title_label.pack(padx=50, pady=20)
+title_label.pack(padx=40, pady=14)
 
 # ID Setup
 id_label = customtkinter.CTkLabel(
     app, font=font1, text="ID:", text_color="#fff", bg_color=BG_COLOR
 )
-id_label.place(x=20, y=60)
+id_label.place(x=LEFT_X, y=52)
 id_entry = customtkinter.CTkEntry(
     app,
     font=font1,
@@ -230,15 +278,15 @@ id_entry = customtkinter.CTkEntry(
     fg_color=ENTRY_COLOR,
     border_color="#0C9295",
     border_width=1,
-    width=180,
+    width=ENTRY_W,
 )
-id_entry.place(x=100, y=60)
+id_entry.place(x=ENTRY_X, y=52)
 
 # Account Type Setup
 account_type_label = customtkinter.CTkLabel(
     app, font=font1, text="Account", text_color="#fff", bg_color=BG_COLOR
 )
-account_type_label.place(x=20, y=100)
+account_type_label.place(x=LEFT_X, y=90)
 account_type_entry = customtkinter.CTkEntry(
     app,
     font=font1,
@@ -246,15 +294,15 @@ account_type_entry = customtkinter.CTkEntry(
     fg_color=ENTRY_COLOR,
     border_color="#0C9295",
     border_width=1,
-    width=180,
+    width=ENTRY_W,
 )
-account_type_entry.place(x=100, y=100)
+account_type_entry.place(x=ENTRY_X, y=90)
 
 # Username Setup
 username_label = customtkinter.CTkLabel(
     app, font=font1, text="Username", text_color="#fff", bg_color=BG_COLOR
 )
-username_label.place(x=20, y=140)
+username_label.place(x=LEFT_X, y=128)
 username_entry = customtkinter.CTkEntry(
     app,
     font=font1,
@@ -262,15 +310,15 @@ username_entry = customtkinter.CTkEntry(
     fg_color=ENTRY_COLOR,
     border_color="#0C9295",
     border_width=1,
-    width=180,
+    width=ENTRY_W,
 )
-username_entry.place(x=100, y=140)
+username_entry.place(x=ENTRY_X, y=128)
 
 # Email Address Setup
 email_label = customtkinter.CTkLabel(
     app, font=font1, text="Email", text_color="#fff", bg_color=BG_COLOR
 )
-email_label.place(x=20, y=180)
+email_label.place(x=LEFT_X, y=166)
 email_entry = customtkinter.CTkEntry(
     app,
     font=font1,
@@ -278,15 +326,15 @@ email_entry = customtkinter.CTkEntry(
     fg_color=ENTRY_COLOR,
     border_color="#0C9295",
     border_width=1,
-    width=180,
+    width=ENTRY_W,
 )
-email_entry.place(x=100, y=180)
+email_entry.place(x=ENTRY_X, y=166)
 
-# Password
+# Password (characters hidden in the field; real value still stored)
 password_label = customtkinter.CTkLabel(
     app, font=font1, text="Password", text_color="#fff", bg_color=BG_COLOR
 )
-password_label.place(x=20, y=220)
+password_label.place(x=LEFT_X, y=204)
 password_entry = customtkinter.CTkEntry(
     app,
     font=font1,
@@ -294,19 +342,27 @@ password_entry = customtkinter.CTkEntry(
     fg_color=ENTRY_COLOR,
     border_color="#0C9295",
     border_width=1,
-    width=180,
+    width=ENTRY_W,
+    show="*",
 )
-password_entry.place(x=100, y=220)
+password_entry.place(x=ENTRY_X, y=204)
 
 # Notifications
 notification_heading = customtkinter.CTkLabel(
     app, font=font1i, text="Notifications:", text_color="#5A5", bg_color=BG_COLOR
 )
-notification_heading.place(x=940, y=80)
+notification_heading.place(x=RIGHT_X, y=52)
 notification_info = customtkinter.CTkLabel(
-    app, font=font1i, text=message_info, text_color="#5A5", bg_color=BG_COLOR
+    app,
+    font=font1i,
+    text=message_info,
+    text_color="#5A5",
+    bg_color=BG_COLOR,
+    width=RIGHT_BTN_W,
+    anchor="w",
+    justify="left",
 )
-notification_info.place(x=940, y=100)
+notification_info.place(x=RIGHT_X, y=74)
 
 
 # ----------------------------- BUTTONS ---------------------------- #
@@ -322,16 +378,16 @@ add_button = customtkinter.CTkButton(
     bg_color="#161C25",
     cursor="hand2",
     corner_radius=6,
-    width=260,
+    width=FORM_BTN_W,
     command=insert_account,
 )
-add_button.place(x=20, y=270)
+add_button.place(x=LEFT_X, y=255)
 
 # Toggle backup or database display
 seg_btn_label = customtkinter.CTkLabel(
     app, font=font1, text="display", text_color="#fff", bg_color=BG_COLOR
 )
-seg_btn_label.place(x=20, y=315)
+seg_btn_label.place(x=LEFT_X, y=302)
 toggle_values = ["backup_list", "database_list"]
 toggle_btn = customtkinter.CTkSegmentedButton(
     app,
@@ -340,12 +396,12 @@ toggle_btn = customtkinter.CTkSegmentedButton(
     fg_color="#05638A",
     bg_color="#161C25",
     corner_radius=6,
-    height=30,
-    width=260,
+    height=28,
+    width=FORM_BTN_W,
     values=toggle_values,
     command=alternate_accounts,
 )
-toggle_btn.place(x=95, y=315)
+toggle_btn.place(x=88, y=302)
 # set default value
 toggle_btn.set("database_list")
 
@@ -360,42 +416,10 @@ update_button = customtkinter.CTkButton(
     bg_color="#161C25",
     cursor="hand2",
     corner_radius=6,
-    width=260,
+    width=FORM_BTN_W,
     command=update_account,
 )
-update_button.place(x=20, y=360)
-
-# Clear selection
-clear_button = customtkinter.CTkButton(
-    app,
-    font=font1,
-    text_color="#fff",
-    text="Clear",
-    fg_color="#05638A",
-    hover_color="#8888AA",
-    bg_color="#161C25",
-    cursor="hand2",
-    corner_radius=6,
-    width=140,
-    command=lambda: clear_input_fields(True),
-)
-clear_button.place(x=940, y=315)
-
-# Delete
-delete_button = customtkinter.CTkButton(
-    app,
-    font=font1,
-    text_color="#fff",
-    text="Delete Account",
-    fg_color="#882233",
-    hover_color="#A8435A",
-    bg_color="#161C25",
-    cursor="hand2",
-    corner_radius=6,
-    command=delete_account,
-    width=140,
-)
-delete_button.place(x=940, y=360)
+update_button.place(x=LEFT_X, y=348)
 
 # Copy Password
 copy_button = customtkinter.CTkButton(
@@ -409,9 +433,41 @@ copy_button = customtkinter.CTkButton(
     cursor="hand2",
     corner_radius=6,
     command=copy_to_clipboard,
-    width=140,
+    width=RIGHT_BTN_W,
 )
-copy_button.place(x=940, y=270)
+copy_button.place(x=RIGHT_X, y=255)
+
+# Clear selection
+clear_button = customtkinter.CTkButton(
+    app,
+    font=font1,
+    text_color="#fff",
+    text="Clear",
+    fg_color="#05638A",
+    hover_color="#8888AA",
+    bg_color="#161C25",
+    cursor="hand2",
+    corner_radius=6,
+    width=RIGHT_BTN_W,
+    command=lambda: clear_input_fields(True),
+)
+clear_button.place(x=RIGHT_X, y=302)
+
+# Delete
+delete_button = customtkinter.CTkButton(
+    app,
+    font=font1,
+    text_color="#fff",
+    text="Delete Account",
+    fg_color="#882233",
+    hover_color="#A8435A",
+    bg_color="#161C25",
+    cursor="hand2",
+    corner_radius=6,
+    command=delete_account,
+    width=RIGHT_BTN_W,
+)
+delete_button.place(x=RIGHT_X, y=348)
 
 # Generate Password
 gen_button = customtkinter.CTkButton(
@@ -425,10 +481,10 @@ gen_button = customtkinter.CTkButton(
     cursor="hand2",
     corner_radius=6,
     command=generate_pass,
-    height=23,
-    width=45,
+    height=22,
+    width=42,
 )
-gen_button.place(x=133, y=3)
+gen_button.place(x=110, y=3)
 
 
 # ------------------------- ACCOUNTS SHEET ------------------------- #
@@ -442,27 +498,28 @@ style.configure(
     foreground="#bbb",
     background="#222",
     fieldbackground="#140b15",
+    rowheight=20,
 )
 style.map("Treeview", background=[("selected", "#555566")])
 
-tree = ttk.Treeview(app, height=15)
+tree = ttk.Treeview(app, height=14)
 
 tree["columns"] = ("ID", "Account", "Username", "Email", "Password")
 
 tree.column("#0", width=0, stretch=tk.NO)  # Hide the default first Column
-dict_of_widths = {1: 35, 2: 80, 3: 120, 4: 155, 5: 210}  # Dict of widths for each field
+dict_of_widths = {1: 28, 2: 58, 3: 72, 4: 110, 5: 90}
 count = 1
 for item in tree["columns"]:
     tree.column(item, anchor=tk.CENTER, width=dict_of_widths[count])
     count += 1
 
-list = {1: "ID", 2: "Account", 3: "Username", 4: "Email", 5: "Password"}  # Titles/field
+list = {1: "ID", 2: "Account", 3: "Username", 4: "Email", 5: "Password"}
 count = 1
 for item in tree["columns"]:
     tree.heading(list[count], text=list[count])
     count += 1
 
-tree.place(x=310, y=60)
+tree.place(x=TREE_X, y=52)
 
 tree.bind("<ButtonRelease>", display_data_within_entry_fields)
 
