@@ -8,9 +8,19 @@ The app allows users to store passwords and account details similar to a passwor
 
 The backup file can have duplicated IDs, and these IDs will only be duplicated when updates were made to the original account (with that ID). In this way, the **_backup.csv_** file stores “logs” of changes made to passwords. Individual accounts can be deleted. The **_Accounts.db_** file can be deleted as well, **HOWEVER**, this will delete all accounts. And the only record of any accounts can be found in **_backup.csv_**.
 
+### **Installation and setup:**
+
+Python 3 is required. Clone or download the project, then open a terminal in the root folder and install the dependencies with:
+
+`pip install -r requirements.txt`
+
+Pillow is also used for the background image, so if it is not already installed, run `pip install Pillow` as well.
+
+Both **_backup.csv_** and **_Accounts.db_** ship with dummy data for fake accounts. The **_Accounts.db_** file can be deleted entirely upon first setup if a clean start is preferred. The **_backup.csv_** file can be emptied without removing the top row, and leaving one row blank.
+
 ### **Launching the app:**
 
-Users can run `python app.py` with the terminal opened in the root folder.
+Once the dependencies are installed, users can run `python app.py` with the terminal opened in the root folder.
 
 ### **Usage:**
 
